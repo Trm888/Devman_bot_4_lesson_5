@@ -75,6 +75,9 @@ pip install -r requirements.txt
 python app.py
 ```
 
+### Демастрация работы бота по ссылке
+https://t.me/newbotsalefish_bot
+
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). 
