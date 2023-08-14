@@ -1,5 +1,3 @@
-import sys
-
 from aiogram import types
 from aiogram.utils import executor
 from loguru import logger
@@ -12,9 +10,6 @@ logger.add('debug.log',
            rotation="1 MB",
            compression='zip',
            retention="2 days")
-# logger.add(sys.stdout,
-#            format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}',
-#            level='INFO')
 
 
 async def set_default_commands(dp):
@@ -23,7 +18,6 @@ async def set_default_commands(dp):
             types.BotCommand('start', 'Запустить бота'),
         ]
     )
-
 
 
 async def on_startup(dp):

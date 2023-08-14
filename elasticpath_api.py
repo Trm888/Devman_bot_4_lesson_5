@@ -1,5 +1,4 @@
 import asyncio
-from pprint import pprint
 
 import aiohttp
 import requests
@@ -62,6 +61,7 @@ def get_access_token(client_id, client_secret):
     response.raise_for_status()
     return response.json().get("access_token")
 
+
 # def get_products(access_token):
 #     api_base_url = 'https://useast.api.elasticpath.com/pcm/products'
 #     headers = {'Authorization': f'Bearer {access_token}',
@@ -121,36 +121,54 @@ async def add_existing_product_to_cart(product_id, user_id, quantity=1):
             data = await response.json()
             return data
 
-# def get_cart(cart_ref):
-#     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-#     client_id = env.str("ELASTICPATH_CLIENT_ID")
-#     access_token = get_access_token(client_id, client_secret)
-#     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}'
-#     headers = {'Authorization': f'Bearer {access_token}',
-#                "Content-Type": "application/json"}
-#     response = requests.get(api_base_url, headers=headers)
-#     response.raise_for_status()
-#     total_price = response.json()['data']['meta']['display_price']['with_tax']['formatted']
-#     return total_price
+
+def get_cart(cart_ref):
+    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+    client_id = env.str("ELASTICPATH_CLIENT_ID")
+    access_token = get_access_token(client_id, client_secret)
+    api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}'
+    headers = {'Authorization': f'Bearer {access_token}',
+               "Content-Type": "application/json"}
+    response = requests.get(api_base_url, headers=headers)
+    response.raise_for_status()
+    total_price = response.json()['data']['meta']['display_price']['with_tax']['formatted']
+    return total_price
+
+
+def get_products_from_cart(cart_ref):
+    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+    client_id = env.str("ELASTICPATH_CLIENT_ID")
+    access_token = get_access_token(client_id, client_secret)
+    cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    response = requests.get(cart_url, headers=headers)
+    response.raise_for_status()
+    cart_items = response.json()['data']
+    products = []
+    print(cart_items)
+    for item in cart_items:
+        products.append({'name': item['name'],
+                         'quantity': item['quantity'],
+                         'price': item['meta']['display_price']['with_tax']['value']['formatted']})
+    return products
+
+
 #
-# def get_products_from_cart(cart_ref):
+# def delete_item(cart_ref, cart_item_id):
 #     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
 #     client_id = env.str("ELASTICPATH_CLIENT_ID")
 #     access_token = get_access_token(client_id, client_secret)
-#     cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
+#     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/{cart_item_id}'
 #     headers = {
-#             'Authorization': f'Bearer {access_token}',
-#         }
-#     response = requests.get(cart_url, headers=headers)
+#         'Authorization': f'Bearer {access_token}',
+#     }
+#     response = requests.delete(api_base_url, headers=headers)
 #     response.raise_for_status()
-#     cart_items = response.json()['data']
-#     products = []
-#     for item in cart_items:
-#
-#         products.append({'name': item['name'],
-#                          'quantity': item['quantity'],
-#                          'price': item['meta']['display_price']['with_tax']['value']['formatted']})
-#     return products
+#     deleted_cart_item = response.json()
+#     return deleted_cart_item
+
 
 async def get_image_url(access_token, main_image_id):
     api_base_url = f'https://useast.api.elasticpath.com/v2/files/{main_image_id}'
@@ -182,7 +200,6 @@ async def fetch_products():
         }
 
     for product in products:
-
         products_information.append({'id': product['id'],
                                      'name': product['attributes']['name'],
                                      'sku': product['attributes']['sku'],
@@ -212,8 +229,8 @@ async def get_items_cart(cart_ref):
     access_token = get_access_token(client_id, client_secret)
     cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
     headers = {
-            'Authorization': f'Bearer {access_token}',
-        }
+        'Authorization': f'Bearer {access_token}',
+    }
     async with aiohttp.ClientSession() as session:
         async with session.get(cart_url, headers=headers) as response:
             response.raise_for_status()
@@ -221,11 +238,26 @@ async def get_items_cart(cart_ref):
             cart_items = data['data']
             products = []
             for item in cart_items:
-
-                products.append({'name': item['name'],
+                products.append({'id': item['id'],
+                                 'name': item['name'],
                                  'quantity': item['quantity'],
                                  'price': item['meta']['display_price']['with_tax']['value']['formatted']})
             return products
+
+
+async def delete_item(cart_ref, cart_item_id):
+    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+    client_id = env.str("ELASTICPATH_CLIENT_ID")
+    access_token = get_access_token(client_id, client_secret)
+    api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/{cart_item_id}'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.delete(api_base_url, headers=headers) as response:
+            response.raise_for_status()
+            data = await response.json()
+            return data
 
 # async def fetch_pcm_products():
 #     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
@@ -236,3 +268,5 @@ async def get_items_cart(cart_ref):
 
 # pprint(get_products_from_cart(368526605))
 # pprint(get_cart(368526605))
+# delete_item(368526605, '73254f9a-7f4c-4831-a73d-291748e64ae1')
+# pprint(get_products_from_cart(368526605))
