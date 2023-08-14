@@ -29,4 +29,5 @@ def get_delete_item_keyboard(buttons: list):
     for button in buttons:
         keyboard.insert(InlineKeyboardButton(text=button['text'], callback_data=button['callback_data']))
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data='back'))
+    keyboard.add(InlineKeyboardButton(text='Оплатить', callback_data='pay'))
     return keyboard

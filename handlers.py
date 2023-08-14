@@ -4,11 +4,11 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 
-# from app import logger
 from elasticpath_api import fetch_products, add_existing_product_to_cart, get_items_cart, get_total_price_cart, \
     delete_item
 from keyboards import get_main_keyboard, get_qty_keyboard, get_delete_item_keyboard
 from loader import dp
+from utils import EmailCheck
 
 
 class UserStates(StatesGroup):
@@ -16,6 +16,7 @@ class UserStates(StatesGroup):
     HANDLE_MENU = State()
     HANDLE_DESCRIPTION = State()
     CART_MENU = State()
+    WAITING_EMAIL = State()
 
 
 @dp.message_handler(commands="start", state='*')
@@ -131,6 +132,21 @@ async def handle_remove_item(callback_query: types.CallbackQuery):
     await delete_item(callback_query.from_user.id, item_id)
     await callback_query.answer("Товар удален из корзины!")
     await get_cart(callback_query)
+
+@dp.callback_query_handler(lambda callback_query: callback_query.data == "pay", state=UserStates.CART_MENU)
+async def handle_pay(callback_query: types.CallbackQuery):
+    await callback_query.message.edit_text("Пришлите мне пожалуйста вашу почту.")
+    await UserStates.WAITING_EMAIL.set()
+
+@dp.message_handler(state=UserStates.WAITING_EMAIL)
+async def handle_email(message: types.Message, state: FSMContext):
+    check_email = await EmailCheck().check(message.text)
+    if not check_email:
+        await message.answer("Неверный формат почты. Попробуйте еще раз.")
+        return
+    await message.answer(f"Спасибо за заказ! Ваша почта {message.text} принята.")
+    await state.finish()
+    await cmd_start(message, state)
 
 # @dp.message_handler(content_types=types.ContentTypes.TEXT, state=UserStates.ECHO)
 # async def echo(message: types.Message):
