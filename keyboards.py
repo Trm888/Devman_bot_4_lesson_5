@@ -9,12 +9,6 @@ def get_main_keyboard(buttons: list):
     return keyboard
 
 
-# def get_back_keyboard():
-#     keyboard = InlineKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-#     keyboard.insert(InlineKeyboardButton(text='Назад', callback_data='back'))
-#     return keyboard
-
-
 def get_qty_keyboard():
     keyboard = InlineKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
     for num in range(5):
@@ -31,4 +25,3 @@ def get_delete_item_keyboard(buttons: list):
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data='back'))
     keyboard.add(InlineKeyboardButton(text='Оплатить', callback_data='pay'))
     return keyboard
-
