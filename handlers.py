@@ -5,7 +5,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 
 from elasticpath_api import fetch_products, add_existing_product_to_cart, get_items_cart, get_total_price_cart, \
-    delete_item
+    delete_item, create_user, get_user
 from keyboards import get_main_keyboard, get_qty_keyboard, get_delete_item_keyboard
 from loader import dp
 from utils import EmailCheck
@@ -140,12 +140,13 @@ async def handle_pay(callback_query: types.CallbackQuery):
 
 @dp.message_handler(state=UserStates.WAITING_EMAIL)
 async def handle_email(message: types.Message, state: FSMContext):
-    check_email = await EmailCheck().check(message.text)
+    check_email = await EmailCheck().check(message)
     if not check_email:
         await message.answer("Неверный формат почты. Попробуйте еще раз.")
         return
     await message.answer(f"Спасибо за заказ! Ваша почта {message.text} принята.")
     await state.finish()
+    await create_user(str(message.from_user.id), message.text)
     await cmd_start(message, state)
 
 # @dp.message_handler(content_types=types.ContentTypes.TEXT, state=UserStates.ECHO)

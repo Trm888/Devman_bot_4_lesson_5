@@ -1,4 +1,5 @@
 import asyncio
+from pprint import pprint
 
 import aiohttp
 import requests
@@ -258,6 +259,55 @@ async def delete_item(cart_ref, cart_item_id):
             response.raise_for_status()
             data = await response.json()
             return data
+
+
+async def create_user(user_id, mail):
+    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+    client_id = env.str("ELASTICPATH_CLIENT_ID")
+    access_token = get_access_token(client_id, client_secret)
+    api_base_url = f'https://useast.api.elasticpath.com/v2/customers/'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    payload = {
+        'data': {
+            'type': 'customer',
+            'name': user_id,
+            'email': mail,
+        }
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(api_base_url, headers=headers, json=payload) as response:
+            response.raise_for_status()
+            data = await response.json()
+            return data
+
+# async def get_user(user_id):
+#     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+#     client_id = env.str("ELASTICPATH_CLIENT_ID")
+#     access_token = get_access_token(client_id, client_secret)
+#     api_base_url = f'https://useast.api.elasticpath.com/v2/customers/{user_id}'
+#     headers = {
+#         'Authorization': f'Bearer {access_token}',
+#     }
+#     async with aiohttp.ClientSession() as session:
+#         async with session.get(api_base_url, headers=headers) as response:
+#             response.raise_for_status()
+#             data = await response.json()
+#             return data
+
+def get_user():
+    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+    client_id = env.str("ELASTICPATH_CLIENT_ID")
+    access_token = get_access_token(client_id, client_secret)
+    api_base_url = f'https://useast.api.elasticpath.com/v2/customers/'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    response = requests.get(api_base_url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
 
 # async def fetch_pcm_products():
 #     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")

@@ -31,3 +31,4 @@ def get_delete_item_keyboard(buttons: list):
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data='back'))
     keyboard.add(InlineKeyboardButton(text='Оплатить', callback_data='pay'))
     return keyboard
+
