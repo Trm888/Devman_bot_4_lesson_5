@@ -1,24 +1,9 @@
-import asyncio
-import sys
-
-import requests
-from environs import Env
-from loguru import logger
 import aiohttp
+from environs import Env
 
 env = Env()
 env.read_env()
 
-
-# logger.add('debug.log',
-#            format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}',
-#            level='INFO',
-#            rotation="1 MB",
-#            compression='zip',
-#            retention="2 days")
-# logger.add(sys.stdout,
-#            format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}',
-#            level='INFO')
 
 async def get_access_token(client_id, client_secret):
     token_url = "https://useast.api.elasticpath.com/oauth/access_token"
@@ -36,8 +21,20 @@ async def get_access_token(client_id, client_secret):
             data = await response.json()
             return data.get("access_token")
 
-async def get_products(access_token):
+
+async def get_pcm_products(access_token):
     api_base_url = 'https://useast.api.elasticpath.com/pcm/products'
+    headers = {'Authorization': f'Bearer {access_token}',
+               "Content-Type": "application/json"}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_base_url, headers=headers) as response:
+            response.raise_for_status()
+            data = await response.json()
+            return data['data']
+
+
+async def get_products(access_token):
+    api_base_url = 'https://useast.api.elasticpath.com/catalog/products'
     headers = {'Authorization': f'Bearer {access_token}',
                "Content-Type": "application/json"}
     async with aiohttp.ClientSession() as session:
@@ -132,23 +129,54 @@ async def get_products(access_token):
 #     response.raise_for_status()
 #     return response.json()
 
+async def get_image_url(access_token, main_image_id):
+    api_base_url = f'https://useast.api.elasticpath.com/v2/files/{main_image_id}'
+    headers = {'Authorization': f'Bearer {access_token}',
+               "Content-Type": "application/json"}
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_base_url, headers=headers) as response:
+            response.raise_for_status()
+            data = await response.json()
+            return data['data']['link']['href']
+
 
 async def fetch_products():
     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
     client_id = env.str("ELASTICPATH_CLIENT_ID")
+    products_information = []
     access_token = await get_access_token(client_id, client_secret)
     products = await get_products(access_token)
-    return products
-    # products = get_products(access_token)['data']
-    # print(products)
-    # print(product['id'])
-    # access_token = get_access_token(client_id, client_secret)
-    # print(add_existing_product_to_cart(access_token, product['id'], '2122'))
-    # print(get_products_from_cart(access_token, '2122'))
+    products_pcm = await get_pcm_products(access_token)
+    # urls = await get_image_url(access_token, '2bc62498-a0dc-4c22-a3e3-ea03a9139349')
+    # print(urls)
+    pcm_description_map = {}
+    for product in products_pcm:
+        product_id = product['id']
+        description = product['attributes']['description']
+        main_image_id = product['relationships']['main_image']['data']['id']
 
+        pcm_description_map[product_id] = {
+            'description': description,
+            'main_image_id': main_image_id
+        }
+    print(pcm_description_map)
 
-    # logger.success(products)
+    for product in products:
+        url = await get_image_url(access_token, pcm_description_map.get(product['id'], None)['main_image_id'])
+        products_information.append({'id': product['id'],
+                                     'name': product['attributes']['name'],
+                                     'sku': product['attributes']['sku'],
+                                     'price': product['meta']['display_price']['with_tax']['formatted'],
+                                     'description': pcm_description_map.get(product['id'], None)['description'],
+                                     'url': url})
+    # print(products_pcm)
 
+    return products_information
 
-if __name__ == '__main__':
-    main()
+# async def fetch_pcm_products():
+#     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+#     client_id = env.str("ELASTICPATH_CLIENT_ID")
+#     access_token = await get_access_token(client_id, client_secret)
+#     products = await get_pcm_products(access_token)
+#     return products
