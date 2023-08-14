@@ -13,7 +13,7 @@ COPY requirements.txt .
 
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-RUN chmod -R 777 /star-burger
+RUN chmod -R 777 /Devman_bot_4_lesson_5
 
 COPY . .
 
