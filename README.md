@@ -25,6 +25,7 @@ Seafood Bot — это телеграмм-бот, предоставляющий
 - `ELASTICPATH_CLIENT_ID` смотри пункт 8
 
 ## Как запустить бота через Docker
+Предварительно установите [Docker](https://www.docker.com/) и [Docker Compose](https://docs.docker.com/compose/).
 
 Скачайте код:
 ```sh
