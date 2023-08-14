@@ -2,10 +2,10 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-from elasticpath_api import fetch_products, add_existing_product_to_cart
+from elasticpath_api import fetch_products, add_existing_product_to_cart, get_items_cart, get_total_price_cart
 from keyboards import get_main_keyboard, get_qty_keyboard
 from loader import dp
-
+from app import logger
 
 class UserStates(StatesGroup):
     START = State()
@@ -15,6 +15,7 @@ class UserStates(StatesGroup):
 
 @dp.message_handler(commands="start", state='*')
 async def cmd_start(message: types.Message, state: FSMContext):
+    await message.delete()
     await UserStates.START.set()
 
     data = await state.get_data()
@@ -35,6 +36,24 @@ async def cmd_start(message: types.Message, state: FSMContext):
 
     await message.answer("Привет! Выбери товар.", reply_markup=get_main_keyboard(buttons))
     await UserStates.HANDLE_MENU.set()
+
+
+@dp.callback_query_handler(lambda callback_query: callback_query.data == "cart",
+                           state=[UserStates.HANDLE_MENU, UserStates.HANDLE_DESCRIPTION])
+async def cmd_cart(callback_query: types.CallbackQuery):
+    await callback_query.message.delete()
+    cart_items = await get_items_cart(callback_query.from_user.id)
+    print(cart_items)
+    total_price = await get_total_price_cart(callback_query.from_user.id)
+    cart_text = ""
+    for item in cart_items:
+        cart_text += (f'Наименование товара: {item["name"]}\n'
+                      f'Количество: {item["quantity"]}\n'
+                      f'Цена: {item["price"]}\n\n')
+
+    logger.info(f"User {callback_query.from_user.id} requested cart")
+
+    await callback_query.message.answer(f"В корзине:\n\n{cart_text}Общая сумма: {total_price}")
 
 
 @dp.callback_query_handler(state=UserStates.HANDLE_MENU)
@@ -68,6 +87,7 @@ async def handle_menu(callback_query: types.CallbackQuery, state: FSMContext):
                                                       f"\n\n",
                                               reply_markup=get_qty_keyboard()
                                               )
+    logger.info(f"User {callback_query.from_user.id} requested product {chosen_product['name']}")
     await UserStates.HANDLE_DESCRIPTION.set()
 
 
@@ -81,12 +101,10 @@ async def cmd_back(callback_query: types.CallbackQuery, state: FSMContext):
 async def handle_description(callback_query: types.CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     chosen_product = user_data.get("chosen_product")
-    user_id = str(callback_query.from_user.id)
 
     qty = int(callback_query.data)
-    await add_existing_product_to_cart(chosen_product['id'], user_id, qty)
-    print(user_id)
-
+    await add_existing_product_to_cart(chosen_product['id'], callback_query.from_user.id, qty)
+    logger.info(f"User {callback_query.from_user.id} added {qty} of {chosen_product['name']} to cart")
 
 # @dp.message_handler(content_types=types.ContentTypes.TEXT, state=UserStates.ECHO)
 # async def echo(message: types.Message):

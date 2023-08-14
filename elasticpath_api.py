@@ -1,4 +1,5 @@
 import asyncio
+from pprint import pprint
 
 import aiohttp
 import requests
@@ -70,13 +71,7 @@ def get_access_token(client_id, client_secret):
 #     return response.json()
 #
 #
-# def get_cart(access_token, cart_ref):
-#     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}'
-#     headers = {'Authorization': f'Bearer {access_token}',
-#                "Content-Type": "application/json"}
-#     response = requests.get(api_base_url, headers=headers)
-#     response.raise_for_status()
-#     return response.json()
+
 #
 # def add_custom_product_to_cart(access_token, cart_ref):
 #     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/'
@@ -125,20 +120,37 @@ async def add_existing_product_to_cart(product_id, user_id, quantity=1):
             response.raise_for_status()
             data = await response.json()
             return data
+
+# def get_cart(cart_ref):
+#     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+#     client_id = env.str("ELASTICPATH_CLIENT_ID")
+#     access_token = get_access_token(client_id, client_secret)
+#     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}'
+#     headers = {'Authorization': f'Bearer {access_token}',
+#                "Content-Type": "application/json"}
+#     response = requests.get(api_base_url, headers=headers)
+#     response.raise_for_status()
+#     total_price = response.json()['data']['meta']['display_price']['with_tax']['formatted']
+#     return total_price
 #
+# def get_products_from_cart(cart_ref):
+#     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+#     client_id = env.str("ELASTICPATH_CLIENT_ID")
+#     access_token = get_access_token(client_id, client_secret)
+#     cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
+#     headers = {
+#             'Authorization': f'Bearer {access_token}',
+#         }
+#     response = requests.get(cart_url, headers=headers)
+#     response.raise_for_status()
+#     cart_items = response.json()['data']
+#     products = []
+#     for item in cart_items:
 #
-#
-def get_products_from_cart(cart_ref):
-    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-    client_id = env.str("ELASTICPATH_CLIENT_ID")
-    access_token = get_access_token(client_id, client_secret)
-    cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
-    headers = {
-            'Authorization': f'Bearer {access_token}',
-        }
-    response = requests.get(cart_url, headers=headers)
-    response.raise_for_status()
-    return response.json()
+#         products.append({'name': item['name'],
+#                          'quantity': item['quantity'],
+#                          'price': item['meta']['display_price']['with_tax']['value']['formatted']})
+#     return products
 
 async def get_image_url(access_token, main_image_id):
     api_base_url = f'https://useast.api.elasticpath.com/v2/files/{main_image_id}'
@@ -177,9 +189,43 @@ async def fetch_products():
                                      'price': product['meta']['display_price']['with_tax']['formatted'],
                                      'description': pcm_description_map.get(product['id'], None)['description'],
                                      'url': pcm_description_map.get(product['id'], None)['url']})
-    # print(products_pcm)
-
     return products_information
+
+
+async def get_total_price_cart(cart_ref):
+    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+    client_id = env.str("ELASTICPATH_CLIENT_ID")
+    access_token = get_access_token(client_id, client_secret)
+    api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}'
+    headers = {'Authorization': f'Bearer {access_token}',
+               "Content-Type": "application/json"}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_base_url, headers=headers) as response:
+            response.raise_for_status()
+            data = await response.json()
+            return data['data']['meta']['display_price']['with_tax']['formatted']
+
+
+async def get_items_cart(cart_ref):
+    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+    client_id = env.str("ELASTICPATH_CLIENT_ID")
+    access_token = get_access_token(client_id, client_secret)
+    cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
+    headers = {
+            'Authorization': f'Bearer {access_token}',
+        }
+    async with aiohttp.ClientSession() as session:
+        async with session.get(cart_url, headers=headers) as response:
+            response.raise_for_status()
+            data = await response.json()
+            cart_items = data['data']
+            products = []
+            for item in cart_items:
+
+                products.append({'name': item['name'],
+                                 'quantity': item['quantity'],
+                                 'price': item['meta']['display_price']['with_tax']['value']['formatted']})
+            return products
 
 # async def fetch_pcm_products():
 #     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
@@ -188,4 +234,5 @@ async def fetch_products():
 #     products = await get_pcm_products(access_token)
 #     return products
 
-print(get_products_from_cart(368526605))
+# pprint(get_products_from_cart(368526605))
+# pprint(get_cart(368526605))

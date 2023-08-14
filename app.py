@@ -12,9 +12,9 @@ logger.add('debug.log',
            rotation="1 MB",
            compression='zip',
            retention="2 days")
-logger.add(sys.stdout,
-           format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}',
-           level='INFO')
+# logger.add(sys.stdout,
+#            format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}',
+#            level='INFO')
 
 
 async def set_default_commands(dp):
@@ -23,7 +23,7 @@ async def set_default_commands(dp):
             types.BotCommand('start', 'Запустить бота'),
         ]
     )
-    logger.info("Бот был запущен")
+
 
 
 async def on_startup(dp):
@@ -31,4 +31,5 @@ async def on_startup(dp):
 
 
 if __name__ == '__main__':
+    logger.info("Бот был запущен")
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
