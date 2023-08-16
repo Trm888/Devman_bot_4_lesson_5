@@ -9,7 +9,7 @@ def get_main_keyboard(buttons: list):
     return keyboard
 
 
-def get_qty_keyboard():
+def get_add_quantity_keyboard():
     keyboard = InlineKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
     for num in range(5):
         keyboard.insert(InlineKeyboardButton(text=f'{num + 1} кг', callback_data=str(num + 1)))
