@@ -28,7 +28,7 @@ async def get_products(access_token):
             return data['data']
 
 
-def get_access_token(client_id, client_secret):
+async def get_access_token(client_id, client_secret):
     token_url = "https://useast.api.elasticpath.com/oauth/access_token"
     headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -38,14 +38,14 @@ def get_access_token(client_id, client_secret):
         "client_secret": client_secret,
         "grant_type": "client_credentials"
     }
-    response = requests.post(token_url, headers=headers, data=payload)
-    response.raise_for_status()
-    return response.json().get("access_token")
+    async with aiohttp.ClientSession() as session:
+        async with session.post(token_url, headers=headers, data=payload) as response:
+            response.raise_for_status()
+            data = await response.json()
+            return data["access_token"]
 
 
 async def add_existing_product_to_cart(product_id, user_id, client_id, client_secret, quantity=1):
-    # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-    # client_id = env.str("ELASTICPATH_CLIENT_ID")
     access_token = get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{user_id}/items/'
     headers = {
@@ -112,8 +112,6 @@ async def get_image_url(access_token, main_image_id):
 
 
 async def fetch_products(client_id, client_secret):
-    # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-    # client_id = env.str("ELASTICPATH_CLIENT_ID")
     products_information = []
     access_token = get_access_token(client_id, client_secret)
     products, products_pcm = await asyncio.gather(get_products(access_token), get_pcm_products(access_token))
@@ -139,8 +137,6 @@ async def fetch_products(client_id, client_secret):
 
 
 async def get_total_price_cart(cart_ref, client_id, client_secret):
-    # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-    # client_id = env.str("ELASTICPATH_CLIENT_ID")
     access_token = get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}'
     headers = {'Authorization': f'Bearer {access_token}',
@@ -153,8 +149,6 @@ async def get_total_price_cart(cart_ref, client_id, client_secret):
 
 
 async def get_items_cart(cart_ref, client_id, client_secret):
-    # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-    # client_id = env.str("ELASTICPATH_CLIENT_ID")
     access_token = get_access_token(client_id, client_secret)
     cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
     headers = {
@@ -175,8 +169,6 @@ async def get_items_cart(cart_ref, client_id, client_secret):
 
 
 async def delete_item(cart_ref, cart_item_id, client_id, client_secret):
-    # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-    # client_id = env.str("ELASTICPATH_CLIENT_ID")
     access_token = get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/{cart_item_id}'
     headers = {
@@ -190,8 +182,6 @@ async def delete_item(cart_ref, cart_item_id, client_id, client_secret):
 
 
 async def create_user(user_id, mail, client_id, client_secret):
-    # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-    # client_id = env.str("ELASTICPATH_CLIENT_ID")
     access_token = get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/customers/'
     headers = {
@@ -212,8 +202,6 @@ async def create_user(user_id, mail, client_id, client_secret):
 
 
 def get_user(client_id, client_secret):
-    # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-    # client_id = env.str("ELASTICPATH_CLIENT_ID")
     access_token = get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/customers/'
     headers = {
