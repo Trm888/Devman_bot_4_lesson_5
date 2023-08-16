@@ -46,7 +46,7 @@ async def get_access_token(client_id, client_secret):
 
 
 async def add_existing_product_to_cart(product_id, user_id, client_id, client_secret, quantity=1):
-    access_token = get_access_token(client_id, client_secret)
+    access_token = await get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{user_id}/items/'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -113,7 +113,7 @@ async def get_image_url(access_token, main_image_id):
 
 async def fetch_products(client_id, client_secret):
     products_information = []
-    access_token = get_access_token(client_id, client_secret)
+    access_token = await get_access_token(client_id, client_secret)
     products, products_pcm = await asyncio.gather(get_products(access_token), get_pcm_products(access_token))
     pcm_description_map = {}
     for product in products_pcm:
@@ -137,7 +137,7 @@ async def fetch_products(client_id, client_secret):
 
 
 async def get_total_price_cart(cart_ref, client_id, client_secret):
-    access_token = get_access_token(client_id, client_secret)
+    access_token = await get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}'
     headers = {'Authorization': f'Bearer {access_token}',
                "Content-Type": "application/json"}
@@ -149,7 +149,7 @@ async def get_total_price_cart(cart_ref, client_id, client_secret):
 
 
 async def get_items_cart(cart_ref, client_id, client_secret):
-    access_token = get_access_token(client_id, client_secret)
+    access_token = await get_access_token(client_id, client_secret)
     cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -169,7 +169,7 @@ async def get_items_cart(cart_ref, client_id, client_secret):
 
 
 async def delete_item(cart_ref, cart_item_id, client_id, client_secret):
-    access_token = get_access_token(client_id, client_secret)
+    access_token = await get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/{cart_item_id}'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -182,7 +182,7 @@ async def delete_item(cart_ref, cart_item_id, client_id, client_secret):
 
 
 async def create_user(user_id, mail, client_id, client_secret):
-    access_token = get_access_token(client_id, client_secret)
+    access_token = await get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/customers/'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -202,7 +202,7 @@ async def create_user(user_id, mail, client_id, client_secret):
 
 
 def get_user(client_id, client_secret):
-    access_token = get_access_token(client_id, client_secret)
+    access_token = await get_access_token(client_id, client_secret)
     api_base_url = f'https://useast.api.elasticpath.com/v2/customers/'
     headers = {
         'Authorization': f'Bearer {access_token}',
