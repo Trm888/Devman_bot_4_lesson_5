@@ -2,10 +2,8 @@ import asyncio
 
 import aiohttp
 import requests
-from environs import Env
 
-env = Env()
-env.read_env()
+from loader import env
 
 
 async def get_pcm_products(access_token):
