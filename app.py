@@ -1,8 +1,13 @@
 from aiogram import types
 from aiogram.utils import executor
+from environs import Env
 from loguru import logger
 
-from handlers import dp
+import handlers
+from loader import get_bot, get_dispatcher
+# from handlers import dp
+
+
 
 logger.add('debug.log',
            format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}',
@@ -25,5 +30,16 @@ async def on_startup(dp):
 
 
 if __name__ == '__main__':
+    env = Env()
+    env.read_env()
+    bot_token = env.str('TG_TOKEN')
+    host = env.str('REDIS_HOST')
+    port = env.int('REDIS_PORT')
+    redis_password = env.str('REDIS_PASSWORD')
+    client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
+    client_id = env.str("ELASTICPATH_CLIENT_ID")
+    bot = get_bot(bot_token)
+    dp = get_dispatcher(bot, host, port, redis_password)
+    handlers.register_handlers(dp, client_id, client_secret)
     logger.info("Бот был запущен")
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
