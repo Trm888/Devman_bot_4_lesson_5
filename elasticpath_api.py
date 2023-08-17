@@ -42,7 +42,7 @@ async def get_access_token(client_id, client_secret):
         async with session.post(token_url, headers=headers, data=payload) as response:
             response.raise_for_status()
             token_info = await response.json()
-            return token_info["access_token"], token_info["expires"]
+            return token_info["access_token"]
 
 
 
