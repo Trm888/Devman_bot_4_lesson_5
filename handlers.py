@@ -7,8 +7,7 @@ from aiogram.utils.exceptions import MessageToDeleteNotFound
 from elasticpath_api import fetch_products, add_existing_product_to_cart, get_items_cart, get_total_price_cart, \
     delete_item, create_user
 from keyboards import get_main_keyboard, get_add_quantity_keyboard, get_delete_item_keyboard
-# from loader import dp
-from utils import EmailCheck
+from utils import EmailCheck, get_or_update_token
 
 
 class UserStates(StatesGroup):
@@ -19,7 +18,7 @@ class UserStates(StatesGroup):
     WAITING_EMAIL = State()
 
 
-def register_handlers(dp, token):
+def register_handlers(dp, client_id, client_secret, host, port, redis_password):
     @dp.message_handler(commands="start", state='*')
     async def cmd_start(message: types.Message, state: FSMContext):
         try:
@@ -31,6 +30,8 @@ def register_handlers(dp, token):
         data = await state.get_data()
         products = data.get("products")
         if not products:
+            token = await get_or_update_token(client_id, client_secret, host, port, redis_password)
+
             products = await fetch_products(token)
             await state.set_data({"products": products})
         buttons = []
@@ -44,6 +45,7 @@ def register_handlers(dp, token):
                                state=[UserStates.HANDLE_MENU, UserStates.HANDLE_DESCRIPTION])
     async def get_cart(callback_query: types.CallbackQuery):
         await callback_query.message.delete()
+        token = await get_or_update_token(client_id, client_secret, host, port, redis_password)
         cart_items = await get_items_cart(callback_query.from_user.id, token)
         if not cart_items:
             await callback_query.message.answer("Ваша корзина пуста.", reply_markup=InlineKeyboardMarkup().add(
@@ -67,8 +69,6 @@ def register_handlers(dp, token):
                                state=UserStates.HANDLE_MENU)
     async def handle_menu(callback_query: types.CallbackQuery, state: FSMContext):
         product_id = callback_query.data.replace("chosen_", "")
-        # button_text = callback_query.message.reply_markup.inline_keyboard[0][0].text
-        # print(button_text)
         user_data = await state.get_data()
         products = user_data.get("products")
         chosen_product = {}
@@ -111,6 +111,7 @@ def register_handlers(dp, token):
         user_data = await state.get_data()
         chosen_product = user_data.get("chosen_product")
         qty = int(callback_query.data)
+        token = await get_or_update_token(client_id, client_secret, host, port, redis_password)
         await add_existing_product_to_cart(
             chosen_product['id'],
             callback_query.from_user.id,
@@ -122,6 +123,7 @@ def register_handlers(dp, token):
     @dp.callback_query_handler(lambda callback_query: callback_query.data.startswith("remove_"),
                                state=UserStates.CART_MENU)
     async def handle_remove_item(callback_query: types.CallbackQuery):
+        token = await get_or_update_token(client_id, client_secret, host, port, redis_password)
         item_id = callback_query.data.replace("remove_", "")
         await delete_item(callback_query.from_user.id, item_id, token)
         await callback_query.answer("Товар удален из корзины!")
@@ -140,5 +142,6 @@ def register_handlers(dp, token):
             return
         await message.answer(f"Спасибо за заказ! Ваша почта {message.text} принята.")
         await state.finish()
+        token = await get_or_update_token(client_id, client_secret, host, port, redis_password)
         await create_user(str(message.from_user.id), message.text, token)
         await cmd_start(message, state)

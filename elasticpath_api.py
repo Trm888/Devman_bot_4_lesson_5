@@ -1,9 +1,6 @@
 import asyncio
 
 import aiohttp
-import requests
-
-# from app import client_id, client_secret
 
 
 async def get_pcm_products(token):
@@ -42,8 +39,7 @@ async def get_access_token(client_id, client_secret):
         async with session.post(token_url, headers=headers, data=payload) as response:
             response.raise_for_status()
             token_info = await response.json()
-            return token_info["access_token"]
-
+            return token_info["access_token"], token_info["expires"]
 
 
 async def add_existing_product_to_cart(product_id, user_id, token, quantity):
@@ -64,39 +60,6 @@ async def add_existing_product_to_cart(product_id, user_id, token, quantity):
             response.raise_for_status()
             cart_response = await response.json()
             return cart_response
-
-
-# def get_total_price_cart(cart_ref, client_id, client_secret):
-#     # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-#     # client_id = env.str("ELASTICPATH_CLIENT_ID")
-#     access_token = get_access_token(client_id, client_secret)
-#     api_base_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}'
-#     headers = {'Authorization': f'Bearer {access_token}',
-#                "Content-Type": "application/json"}
-#     response = requests.get(api_base_url, headers=headers)
-#     response.raise_for_status()
-#     total_price = response.json()['data']['meta']['display_price']['with_tax']['formatted']
-#     return total_price
-
-
-# def get_products_from_cart(cart_ref, client_id, client_secret):
-#     # client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
-#     # client_id = env.str("ELASTICPATH_CLIENT_ID")
-#     access_token = get_access_token(client_id, client_secret)
-#     cart_url = f'https://useast.api.elasticpath.com/v2/carts/{cart_ref}/items/'
-#     headers = {
-#         'Authorization': f'Bearer {access_token}',
-#     }
-#     response = requests.get(cart_url, headers=headers)
-#     response.raise_for_status()
-#     cart_items = response.json()['data']
-#     products = []
-#     print(cart_items)
-#     for item in cart_items:
-#         products.append({'name': item['name'],
-#                          'quantity': item['quantity'],
-#                          'price': item['meta']['display_price']['with_tax']['value']['formatted']})
-#     return products
 
 
 async def get_image_url(token, main_image_id):
@@ -194,4 +157,3 @@ async def create_user(user_id, mail, token):
             response.raise_for_status()
             user_info = await response.json()
             return user_info
-
