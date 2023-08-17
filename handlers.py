@@ -19,7 +19,7 @@ class UserStates(StatesGroup):
     WAITING_EMAIL = State()
 
 
-def register_handlers(dp, client_id, client_secret):
+def register_handlers(dp, token):
     @dp.message_handler(commands="start", state='*')
     async def cmd_start(message: types.Message, state: FSMContext):
         try:
@@ -31,7 +31,7 @@ def register_handlers(dp, client_id, client_secret):
         data = await state.get_data()
         products = data.get("products")
         if not products:
-            products = await fetch_products(client_id, client_secret)
+            products = await fetch_products(token)
             await state.set_data({"products": products})
         buttons = []
         for product in products:
@@ -44,13 +44,13 @@ def register_handlers(dp, client_id, client_secret):
                                state=[UserStates.HANDLE_MENU, UserStates.HANDLE_DESCRIPTION])
     async def get_cart(callback_query: types.CallbackQuery):
         await callback_query.message.delete()
-        cart_items = await get_items_cart(callback_query.from_user.id, client_id, client_secret)
+        cart_items = await get_items_cart(callback_query.from_user.id, token)
         if not cart_items:
             await callback_query.message.answer("Ваша корзина пуста.", reply_markup=InlineKeyboardMarkup().add(
                 InlineKeyboardButton(text='Назад', callback_data='back')))
             await UserStates.CART_MENU.set()
             return
-        total_price = await get_total_price_cart(callback_query.from_user.id, client_id, client_secret)
+        total_price = await get_total_price_cart(callback_query.from_user.id, token)
         cart_text = ""
         buttons = []
         for item in cart_items:
@@ -114,8 +114,7 @@ def register_handlers(dp, client_id, client_secret):
         await add_existing_product_to_cart(
             chosen_product['id'],
             callback_query.from_user.id,
-            client_id,
-            client_secret,
+            token,
             qty
         )
         await callback_query.answer("Товар добавлен в корзину!")
@@ -124,7 +123,7 @@ def register_handlers(dp, client_id, client_secret):
                                state=UserStates.CART_MENU)
     async def handle_remove_item(callback_query: types.CallbackQuery):
         item_id = callback_query.data.replace("remove_", "")
-        await delete_item(callback_query.from_user.id, item_id, client_id, client_secret)
+        await delete_item(callback_query.from_user.id, item_id, token)
         await callback_query.answer("Товар удален из корзины!")
         await get_cart(callback_query)
 
@@ -141,5 +140,5 @@ def register_handlers(dp, client_id, client_secret):
             return
         await message.answer(f"Спасибо за заказ! Ваша почта {message.text} принята.")
         await state.finish()
-        await create_user(str(message.from_user.id), message.text, client_id, client_secret)
+        await create_user(str(message.from_user.id), message.text, token)
         await cmd_start(message, state)
