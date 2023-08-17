@@ -38,11 +38,9 @@ async def on_startup(dp):
 
 
 if __name__ == '__main__':
-    print(time.time())
-
     current_token = None
     expires = 0
-
+    print(expires)
     env = Env()
     env.read_env()
     bot_token = env.str('TG_TOKEN')
@@ -54,7 +52,7 @@ if __name__ == '__main__':
 
     loop = asyncio.new_event_loop()
     loop.run_until_complete(get_or_refresh_token(client_id, client_secret))
-
+    print(expires)
     bot = get_bot(bot_token)
     dp = get_dispatcher(bot, host, port, redis_password)
     handlers.register_handlers(dp, current_token)

@@ -13,8 +13,8 @@ async def get_pcm_products(token):
     async with aiohttp.ClientSession() as session:
         async with session.get(api_base_url, headers=headers) as response:
             response.raise_for_status()
-            data = await response.json()
-            return data['data']
+            pcm_products_info = await response.json()
+            return pcm_products_info['data']
 
 
 async def get_products(token):
@@ -24,8 +24,8 @@ async def get_products(token):
     async with aiohttp.ClientSession() as session:
         async with session.get(api_base_url, headers=headers) as response:
             response.raise_for_status()
-            data = await response.json()
-            return data['data']
+            products_info = await response.json()
+            return products_info['data']
 
 
 async def get_access_token(client_id, client_secret):
@@ -41,9 +41,8 @@ async def get_access_token(client_id, client_secret):
     async with aiohttp.ClientSession() as session:
         async with session.post(token_url, headers=headers, data=payload) as response:
             response.raise_for_status()
-            data = await response.json()
-            print(data)
-            return data["access_token"], data["expires"]
+            token_info = await response.json()
+            return token_info["access_token"], token_info["expires"]
 
 
 
@@ -63,8 +62,8 @@ async def add_existing_product_to_cart(product_id, user_id, token, quantity):
     async with aiohttp.ClientSession() as session:
         async with session.post(api_base_url, headers=headers, json=payload) as response:
             response.raise_for_status()
-            data = await response.json()
-            return data
+            cart_response = await response.json()
+            return cart_response
 
 
 # def get_total_price_cart(cart_ref, client_id, client_secret):
@@ -108,8 +107,8 @@ async def get_image_url(token, main_image_id):
     async with aiohttp.ClientSession() as session:
         async with session.get(api_base_url, headers=headers) as response:
             response.raise_for_status()
-            data = await response.json()
-            return data['data']['link']['href']
+            image_info = await response.json()
+            return image_info['data']['link']['href']
 
 
 async def fetch_products(token):
@@ -143,8 +142,8 @@ async def get_total_price_cart(cart_ref, token):
     async with aiohttp.ClientSession() as session:
         async with session.get(api_base_url, headers=headers) as response:
             response.raise_for_status()
-            data = await response.json()
-            return data['data']['meta']['display_price']['with_tax']['formatted']
+            cart_info = await response.json()
+            return cart_info['data']['meta']['display_price']['with_tax']['formatted']
 
 
 async def get_items_cart(cart_ref, token):
@@ -155,8 +154,8 @@ async def get_items_cart(cart_ref, token):
     async with aiohttp.ClientSession() as session:
         async with session.get(cart_url, headers=headers) as response:
             response.raise_for_status()
-            data = await response.json()
-            cart_items = data['data']
+            response_content = await response.json()
+            cart_items = response_content['data']
             products = []
             for item in cart_items:
                 products.append({'id': item['id'],
@@ -174,8 +173,8 @@ async def delete_item(cart_ref, cart_item_id, token):
     async with aiohttp.ClientSession() as session:
         async with session.delete(api_base_url, headers=headers) as response:
             response.raise_for_status()
-            data = await response.json()
-            return data
+            item_info = await response.json()
+            return item_info
 
 
 async def create_user(user_id, mail, token):
@@ -193,6 +192,6 @@ async def create_user(user_id, mail, token):
     async with aiohttp.ClientSession() as session:
         async with session.post(api_base_url, headers=headers, json=payload) as response:
             response.raise_for_status()
-            data = await response.json()
-            return data
+            user_info = await response.json()
+            return user_info
 
