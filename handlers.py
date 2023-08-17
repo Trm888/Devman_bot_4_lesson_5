@@ -1,3 +1,5 @@
+import textwrap
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
@@ -84,18 +86,20 @@ def register_handlers(dp, client_id, client_secret, host, port, redis_password):
                 }
         await state.update_data({"chosen_product": chosen_product})
         await callback_query.message.delete()
+        caption = textwrap.dedent(f"""
+            Вы выбрали {chosen_product['name']}
+
+            Описание: {chosen_product['description']}
+
+            Цена: {chosen_product['price']}
+
+            SKU: {chosen_product['sku']}
+
+            ID: {chosen_product['id']}
+        """)
         await callback_query.message.answer_photo(
             photo=chosen_product['url'],
-            caption=f"Вы выбрали {chosen_product['name']}"
-                    f"\n\n"
-                    f"Описание: {chosen_product['description']}"
-                    f"\n\n"
-                    f"Цена: {chosen_product['price']}"
-                    f"\n\n"
-                    f"SKU: {chosen_product['sku']}"
-                    f"\n\n"
-                    f"ID: {chosen_product['id']}"
-                    f"\n\n",
+            caption=caption,
             reply_markup=get_add_quantity_keyboard()
         )
         await UserStates.HANDLE_DESCRIPTION.set()
