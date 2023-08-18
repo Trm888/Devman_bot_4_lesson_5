@@ -1,4 +1,4 @@
-from aiogram import types
+from aiogram import types, Bot
 from aiogram.utils import executor
 from environs import Env
 from loguru import logger
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     redis_password = env.str('REDIS_PASSWORD')
     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
     client_id = env.str("ELASTICPATH_CLIENT_ID")
-    bot = get_bot(bot_token)
+    bot = Bot(bot_token, parse_mode=types.ParseMode.HTML)
     dp = get_dispatcher(bot, host, port, redis_password)
     handlers.register_handlers(dp, client_id, client_secret, host, port, redis_password)
     logger.info("Бот был запущен")
