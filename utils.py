@@ -24,21 +24,13 @@ async def get_or_update_token(client_id, client_secret, host, port, redis_passwo
     storage = await get_redis_storage(host, port, redis_password)
     current_token = await storage.get("token")
     expires = await storage.get("expires")
+    decode_expires = int(expires.decode("utf-8")) if expires else 0
+    time_left = decode_expires - time.time()
 
-    if not current_token:
+    if not current_token or time_left <= 0:
         current_token, expires = await get_access_token(client_id, client_secret)
-        decode_expires = expires
         await storage.set("token", current_token)
-        await storage.set("expires", decode_expires)
+        await storage.set("expires", expires)
         return current_token
     else:
-        now_time = time.time()
-        expires = int(expires.decode("utf-8"))
-        time_left = expires - now_time
-        if time_left <= 0:
-            current_token, expires = await get_access_token(client_id, client_secret)
-            await storage.set("token", current_token)
-            await storage.set("expires", expires)
-            return current_token
-        else:
-            return current_token.decode("utf-8")
+        return current_token.decode("utf-8")
