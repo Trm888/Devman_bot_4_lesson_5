@@ -38,6 +38,9 @@ if __name__ == '__main__':
     bot = Bot(bot_token, parse_mode=types.ParseMode.HTML)
     storage = RedisStorage2(host=host, port=port, password=redis_password)
     dp = Dispatcher(bot, storage=storage)
-    handlers.register_handlers(dp, client_id, client_secret, host, port, redis_password)
+    config_middleware = handlers.ConfigMiddleware(client_id, client_secret, host, port, redis_password)
+    dp.middleware.setup(config_middleware)
+    handlers.register_handlers(dp)
+
     logger.info("Бот был запущен")
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
