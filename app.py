@@ -1,10 +1,10 @@
-from aiogram import types, Bot
+from aiogram import types, Bot, Dispatcher
+from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from aiogram.utils import executor
 from environs import Env
 from loguru import logger
 
 import handlers
-from loader import get_bot, get_dispatcher
 
 logger.add('debug.log',
            format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}',
@@ -36,7 +36,8 @@ if __name__ == '__main__':
     client_secret = env.str("ELASTICPATH_CLIENT_SECRET")
     client_id = env.str("ELASTICPATH_CLIENT_ID")
     bot = Bot(bot_token, parse_mode=types.ParseMode.HTML)
-    dp = get_dispatcher(bot, host, port, redis_password)
+    storage = RedisStorage2(host=host, port=port, password=redis_password)
+    dp = Dispatcher(bot, storage=storage)
     handlers.register_handlers(dp, client_id, client_secret, host, port, redis_password)
     logger.info("Бот был запущен")
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
